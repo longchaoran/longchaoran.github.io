@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝积存金实时金价</title>
+    <style>
+        /* 页面样式适配手机，简洁清晰 */
+        body {
+            text-align: center;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .title {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .price-box {
+            font-size: 40px;
+            color: #ff6600;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .detail {
+            font-size: 14px;
+            color: #666;
+            line-height: 24px;
+        }
+        .error {
+            color: #ff3333;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">支付宝积存金参考价（上海黄金交易所）</div>
+    <div class="price-box" id="goldPrice">加载中...</div>
+    <div class="detail" id="updateTime"></div>
+    <div class="detail" id="otherInfo"></div>
+
+    <script>
+        // 聚合数据的AppKey（替换成你自己的，就是截图里的ec98f5ee2b7d1b06dd884d8deb5fcf9f）
+        const APP_KEY = "ec98f5ee2b7d1b06dd884d8deb5fcf9f";
+        // 聚合数据接口地址
+        const API_URL = `http://web.juhe.cn/finance/gold/shgold?key=${APP_KEY}`;
+
+        // 获取并展示金价数据
+        async function getGoldData() {
+            try {
+                // 发起接口请求
+                const response = await fetch(API_URL);
+                const result = await response.json();
+
+                // 接口返回成功（聚合数据返回码200表示成功）
+                if (result.error_code === 0) {
+                    // 取主力品种（Au9999）的价格，和支付宝积存金最接近
+                    const goldData = result.result.list.find(item => item.name === "Au9999");
+                    if (goldData) {
+                        document.getElementById("goldPrice").innerText = `${goldData.price} 元/克`;
+                        document.getElementById("updateTime").innerText = `更新时间：${goldData.updateTime}`;
+                        document.getElementById("otherInfo").innerText = `涨跌：${goldData.change} | 开盘：${goldData.openPrice} 元/克`;
+                    } else {
+                        document.getElementById("goldPrice").innerText = "暂无Au9999数据";
+                    }
+                } else {
+                    // 接口返回错误（比如次数用完）
+                    document.getElementById("goldPrice").className = "price-box error";
+                    document.getElementById("goldPrice").innerText = `接口错误：${result.reason}`;
+                }
+            } catch (error) {
+                // 网络异常等问题
+                document.getElementById("goldPrice").className = "price-box error";
+                document.getElementById("goldPrice").innerText = "网络异常，获取失败";
+            }
+        }
+
+        // 首次加载+每30秒自动刷新
+        getGoldData();
+        setInterval(getGoldData, 30000);
+    </script>
+</body>
+</html>
