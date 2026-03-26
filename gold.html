@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝积存金实时金价</title>
+    <style>
+        body {
+            text-align: center;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .title {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .price-box {
+            font-size: 40px;
+            color: #ff6600;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .detail {
+            font-size: 14px;
+            color: #666;
+            line-height: 24px;
+        }
+        .error {
+            color: #ff3333;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">支付宝积存金参考价</div>
+    <div class="price-box" id="goldPrice">加载中...</div>
+    <div class="detail" id="updateTime"></div>
+
+    <script>
+        // 国际金价接口（转换为人民币/克，无需密钥）
+        async function getGoldData() {
+            try {
+                // 获取国际金价（美元/盎司）
+                const res = await fetch("https://api.coinbase.com/v2/prices/gold/spot?currency=CNY");
+                const data = await res.json();
+                
+                // 转换为元/克（1盎司=31.1035克）
+                const usdPerOunce = parseFloat(data.data.amount);
+                const cnyPerGram = (usdPerOunce / 31.1035).toFixed(2); // 保留2位小数
+                const now = new Date().toLocaleString();
+
+                document.getElementById("goldPrice").innerText = `${cnyPerGram} 元/克`;
+                document.getElementById("updateTime").innerText = `更新时间：${now}`;
+            } catch (error) {
+                document.getElementById("goldPrice").className = "price-box error";
+                document.getElementById("goldPrice").innerText = "加载失败，刷新试试";
+            }
+        }
+
+        getGoldData();
+        setInterval(getGoldData, 30000);
+    </script>
+</body>
+</html>
